@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, X, Settings, Phone } from 'lucide-react';
+import { Menu, X, Settings, Phone, LogOut } from 'lucide-react';
 import { SiteConfig } from '../types';
 
 interface NavbarProps {
@@ -7,13 +7,17 @@ interface NavbarProps {
   activeSection: string;
   onNavigate: (sectionId: string) => void;
   onOpenConfig: () => void;
+  isAdminAuthenticated: boolean;
+  onLogout: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   config,
   activeSection,
   onNavigate,
-  onOpenConfig
+  onOpenConfig,
+  isAdminAuthenticated,
+  onLogout
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -21,6 +25,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'beranda', label: 'Beranda' },
     { id: 'galeri', label: 'Galeri' },
     { id: 'katalog', label: 'Katalog' },
+    { id: 'undangan-digital', label: 'Undangan Digital' },
     { id: 'kontak', label: 'Kontak' },
     { id: 'faq', label: 'FAQ' },
     { id: 'data-form', label: 'Data Form', isSpecial: true }
@@ -77,35 +82,39 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
             ))}
 
-            {/* Firebase Live Connected Badge */}
-            <button
-              onClick={onOpenConfig}
-              title="Firebase Firestore Terhubung: Klik untuk melihat status database"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-semibold hover:bg-emerald-100 transition cursor-pointer ml-1"
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="font-mono text-[11px]">Firebase Active</span>
-            </button>
-
-            {/* Config & Guide trigger button */}
-            <button
-              onClick={onOpenConfig}
-              title="Panduan Pemilik & Konfigurasi"
-              className="ml-2 p-2 text-[#7A6E63] hover:text-[#996515] hover:bg-[#F4EDE0] rounded-full transition cursor-pointer"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
+            {/* Owner Admin Badge & Controls - ONLY visible when owner is authenticated */}
+            {isAdminAuthenticated && (
+              <div className="flex items-center gap-2 ml-2 pl-2 border-l border-[#EBE4D5]">
+                <button
+                  onClick={onOpenConfig}
+                  title="Buka Panel Konfigurasi Pemilik"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#996515] hover:bg-[#805310] text-white text-xs font-semibold transition cursor-pointer shadow-xs"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Panel Pemilik</span>
+                </button>
+                <button
+                  onClick={onLogout}
+                  title="Kunci Panel (Logout)"
+                  className="p-1.5 rounded-full bg-stone-100 hover:bg-red-50 text-stone-600 hover:text-red-700 transition cursor-pointer"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </nav>
 
-          {/* Quick Action Button & Mobile Hamburger */}
+          {/* Mobile Right: Hamburger (and Owner shortcut only if authenticated) */}
           <div className="flex items-center gap-2 lg:hidden">
-            <button
-              onClick={onOpenConfig}
-              className="p-2 text-[#7A6E63] hover:text-[#996515] rounded-full"
-              title="Panduan & Konfigurasi"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
+            {isAdminAuthenticated && (
+              <button
+                onClick={onOpenConfig}
+                className="p-2 text-[#996515] bg-[#FAF5EB] rounded-full"
+                title="Panel Pemilik"
+              >
+                <Settings className="w-5 h-5" />
+              </button>
+            )}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="p-2 rounded-lg text-[#2C2926] hover:bg-[#F4EDE0] focus:outline-hidden"
@@ -143,22 +152,38 @@ export const Navbar: React.FC<NavbarProps> = ({
               href={`https://wa.me/${config.whatsappNumber}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 py-2.5 px-4 bg-[#25D366] text-white text-center rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-xs"
+              className="w-full py-2.5 px-4 bg-[#25D366] text-white text-center rounded-xl text-sm font-semibold flex items-center justify-center gap-2 shadow-xs"
             >
               <Phone className="w-4 h-4" />
               WhatsApp Admin
             </a>
-            <button
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onOpenConfig();
-              }}
-              className="py-2.5 px-4 border border-[#D5C9B3] text-[#5C5042] rounded-xl text-sm font-medium flex items-center gap-1.5"
-            >
-              <Settings className="w-4 h-4" />
-              Panduan
-            </button>
           </div>
+
+          {/* Owner options on mobile - ONLY visible when authenticated */}
+          {isAdminAuthenticated && (
+            <div className="pt-2 flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenConfig();
+                }}
+                className="flex-1 py-2 px-3 bg-[#996515] text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5"
+              >
+                <Settings className="w-3.5 h-3.5" />
+                <span>Panel Pemilik</span>
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onLogout();
+                }}
+                className="py-2 px-3 border border-red-200 text-red-600 bg-red-50 rounded-xl text-xs font-semibold flex items-center gap-1"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Kunci</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
     </header>

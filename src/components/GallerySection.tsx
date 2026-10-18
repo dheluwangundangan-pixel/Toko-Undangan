@@ -17,9 +17,16 @@ import { GalleryItem } from '../types';
 interface GallerySectionProps {
   items: GalleryItem[];
   onAddGalleryItem: (item: Omit<GalleryItem, 'id'>) => Promise<void>;
+  isAdminAuthenticated: boolean;
+  onRequestAdminAuth: (action: () => void) => void;
 }
 
-export const GallerySection: React.FC<GallerySectionProps> = ({ items, onAddGalleryItem }) => {
+export const GallerySection: React.FC<GallerySectionProps> = ({ 
+  items, 
+  onAddGalleryItem,
+  isAdminAuthenticated,
+  onRequestAdminAuth
+}) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('Semua');
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [isAutoSlide, setIsAutoSlide] = useState<boolean>(false);
@@ -132,7 +139,13 @@ export const GallerySection: React.FC<GallerySectionProps> = ({ items, onAddGall
 
         {/* Action: Tambah Foto Baru */}
         <button
-          onClick={() => setIsAddModalOpen(true)}
+          onClick={() => {
+            if (!isAdminAuthenticated) {
+              onRequestAdminAuth(() => setIsAddModalOpen(true));
+              return;
+            }
+            setIsAddModalOpen(true);
+          }}
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#2C2926] text-[#E8DCC4] hover:text-white hover:bg-black text-xs font-semibold tracking-wide transition shadow-xs cursor-pointer shrink-0"
         >
           <Plus className="w-4 h-4 text-[#D4AF37]" />

@@ -18,12 +18,16 @@ interface CatalogSectionProps {
   catalogs: CatalogItem[];
   onSelectCatalogForOrder: (catalog: CatalogItem) => void;
   onSaveCatalog: (catalog: CatalogItem) => Promise<void>;
+  isAdminAuthenticated: boolean;
+  onRequestAdminAuth: (action: () => void) => void;
 }
 
 export const CatalogSection: React.FC<CatalogSectionProps> = ({
   catalogs,
   onSelectCatalogForOrder,
-  onSaveCatalog
+  onSaveCatalog,
+  isAdminAuthenticated,
+  onRequestAdminAuth
 }) => {
   const [selectedThemeFilter, setSelectedThemeFilter] = useState<string>('Semua');
   const [zoomItem, setZoomItem] = useState<CatalogItem | null>(null);
@@ -54,6 +58,10 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
     : catalogs.filter((c) => c.theme === selectedThemeFilter);
 
   const openCreateModal = () => {
+    if (!isAdminAuthenticated) {
+      onRequestAdminAuth(() => openCreateModal());
+      return;
+    }
     setFormState({
       id: `dheluwang-${Date.now()}`,
       title: '',
@@ -74,6 +82,14 @@ export const CatalogSection: React.FC<CatalogSectionProps> = ({
 
   const openEditModal = (item: CatalogItem, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isAdminAuthenticated) {
+      onRequestAdminAuth(() => {
+        setFormState({ ...item });
+        setEditItem(item);
+        setIsNewItemModal(false);
+      });
+      return;
+    }
     setFormState({ ...item });
     setEditItem(item);
     setIsNewItemModal(false);

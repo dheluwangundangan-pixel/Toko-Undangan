@@ -16,7 +16,10 @@ import {
   Database,
   Server,
   RefreshCw,
-  ShieldCheck
+  ShieldCheck,
+  Lock,
+  KeyRound,
+  LogOut
 } from 'lucide-react';
 import { SiteConfig } from '../types';
 import { firebaseInfo, testConnection } from '../firebase';
@@ -26,13 +29,15 @@ interface ConfigGuideModalProps {
   onClose: () => void;
   config: SiteConfig;
   onSaveConfig: (newConfig: SiteConfig) => void;
+  onLogout: () => void;
 }
 
 export const ConfigGuideModal: React.FC<ConfigGuideModalProps> = ({
   isOpen,
   onClose,
   config,
-  onSaveConfig
+  onSaveConfig,
+  onLogout
 }) => {
   const [activeTab, setActiveTab] = useState<'config' | 'guide' | 'palette' | 'code' | 'database'>('config');
   const [formData, setFormData] = useState<SiteConfig>({ ...config });
@@ -40,6 +45,11 @@ export const ConfigGuideModal: React.FC<ConfigGuideModalProps> = ({
   const [copiedCodeKey, setCopiedCodeKey] = useState<string | null>(null);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ connected: boolean; message: string; databaseId: string; projectId: string } | null>(null);
+  
+  // Password change state
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordChangeSuccess, setPasswordChangeSuccess] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
 
   if (!isOpen) return null;
 
@@ -54,6 +64,21 @@ export const ConfigGuideModal: React.FC<ConfigGuideModalProps> = ({
     setTimeout(() => {
       setSavedSuccess(false);
     }, 2000);
+  };
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPassword.trim() || newPassword.trim().length < 4) {
+      setPasswordError('Password minimal 4 karakter.');
+      return;
+    }
+    localStorage.setItem('dheluwang_admin_pin', newPassword.trim());
+    setPasswordChangeSuccess(true);
+    setPasswordError('');
+    setNewPassword('');
+    setTimeout(() => {
+      setPasswordChangeSuccess(false);
+    }, 2500);
   };
 
   const handleTestPing = async () => {
@@ -179,12 +204,26 @@ console.log(hitungEstimasi(300));
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="p-2 text-stone-400 hover:text-stone-800 rounded-full hover:bg-stone-100 transition cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                onLogout();
+                onClose();
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 hover:bg-red-50 text-stone-600 hover:text-red-700 text-xs font-semibold transition cursor-pointer"
+              title="Kunci Panel Pemilik (Logout)"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Kunci Panel</span>
+            </button>
+
+            <button
+              onClick={onClose}
+              className="p-2 text-stone-400 hover:text-stone-800 rounded-full hover:bg-stone-100 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Tab Navigation */}
@@ -369,6 +408,49 @@ console.log(hitungEstimasi(300));
                 />
               </div>
 
+              {/* Security & Owner Password Management */}
+              <div className="bg-[#FAF5EB] border border-[#E8DEC9] rounded-2xl p-5 space-y-3">
+                <div className="flex items-center gap-2 text-[#996515]">
+                  <Lock className="w-4 h-4" />
+                  <h5 className="font-bold text-xs uppercase tracking-wider text-[#2C2926]">
+                    Keamanan Akses & Ganti Kata Sandi
+                  </h5>
+                </div>
+                <p className="text-[11px] text-stone-600 leading-relaxed">
+                  Perbarui kata sandi otorisasi Anda secara berkala untuk menjaga keamanan pengaturan data dan katalog website.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 pt-1">
+                  <input
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      if (passwordError) setPasswordError('');
+                    }}
+                    placeholder="Ketik password baru Anda..."
+                    className="flex-1 px-3.5 py-2.5 rounded-xl border border-[#D5C9B3] bg-white text-xs text-[#2C2926] focus:border-[#996515] focus:outline-hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleChangePassword}
+                    className="px-5 py-2.5 rounded-xl bg-[#2C2926] hover:bg-black text-[#F3E5AB] font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 transition cursor-pointer shrink-0"
+                  >
+                    <KeyRound className="w-3.5 h-3.5" />
+                    <span>Perbarui Password</span>
+                  </button>
+                </div>
+
+                {passwordError && (
+                  <p className="text-[11px] text-red-600 font-semibold">{passwordError}</p>
+                )}
+                {passwordChangeSuccess && (
+                  <p className="text-[11px] text-green-700 font-semibold flex items-center gap-1">
+                    <Check className="w-3.5 h-3.5" /> Password pemilik berhasil diganti!
+                  </p>
+                )}
+              </div>
+
               <div className="pt-2 flex justify-end">
                 <button
                   type="submit"
@@ -440,6 +522,24 @@ console.log(hitungEstimasi(300));
                   <p className="text-xs text-stone-600 mt-2">
                     Untuk menambah section baru, buat file baru di folder <code className="bg-stone-100 px-1 rounded">src/components/</code> dan panggil di <code className="bg-stone-100 px-1 rounded">src/App.tsx</code>.
                   </p>
+                </div>
+
+                <div className="border border-emerald-200 rounded-2xl p-5 bg-gradient-to-br from-emerald-50/50 to-white">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <h5 className="font-bold text-[#2C2926] text-base">
+                      4. Panduan Mengonlinekan ke Vercel (Gratis & Cepat)
+                    </h5>
+                  </div>
+                  <p className="text-xs text-stone-600 leading-relaxed mb-3">
+                    Berkas konfigurasi resmi <code className="bg-stone-100 px-1.5 py-0.5 rounded font-mono font-bold text-emerald-800">vercel.json</code> sudah kami siapkan di dalam proyek.
+                  </p>
+                  <ol className="list-decimal pl-5 text-xs text-stone-700 space-y-1.5 leading-relaxed">
+                    <li><strong>Upload ke GitHub:</strong> Masukkan kode proyek ini ke repositori GitHub akun Anda.</li>
+                    <li><strong>Buka Vercel.com:</strong> Login dengan akun GitHub, klik <em>Add New Project</em>, dan pilih repositori Anda.</li>
+                    <li><strong>Pengaturan Otomatis:</strong> Vercel akan otomatis mendeteksi Framework <code>Vite</code>, Output <code>dist</code>, dan Build <code>vite build</code> dari berkas <code>vercel.json</code>.</li>
+                    <li><strong>Klik Deploy:</strong> Dalam 1 menit website Anda sudah online di <code>namaproject.vercel.app</code> dan langsung terhubung dengan Firebase. Anda juga bisa menghubungkan domain pribadi Anda (misal: <code>dheluwang.com</code>).</li>
+                  </ol>
                 </div>
               </div>
             </div>

@@ -11,13 +11,19 @@ import {
   GalleryItem, 
   FAQItem, 
   OrderFormData, 
-  SiteConfig 
+  SiteConfig,
+  DigitalTheme,
+  DigitalInvitationData,
+  DigitalWish
 } from './types';
 import { 
   initialSiteConfig, 
   defaultCatalogs, 
   defaultGallery, 
-  defaultFAQs 
+  defaultFAQs,
+  defaultDigitalThemes,
+  defaultDigitalInvitationsByTheme,
+  defaultDigitalWishes
 } from './data/defaultData';
 
 import { Navbar } from './components/Navbar';
@@ -25,10 +31,12 @@ import { HeroSection } from './components/HeroSection';
 import { AboutSection } from './components/AboutSection';
 import { GallerySection } from './components/GallerySection';
 import { CatalogSection } from './components/CatalogSection';
+import { DigitalInvitationSection } from './components/DigitalInvitationSection';
 import { ContactSection } from './components/ContactSection';
 import { FAQSection } from './components/FAQSection';
 import { DataFormSection } from './components/DataFormSection';
 import { ConfigGuideModal } from './components/ConfigGuideModal';
+import { AdminPasswordModal } from './components/AdminPasswordModal';
 import { InteractiveWhatsAppButton } from './components/InteractiveWhatsAppButton';
 import { Footer } from './components/Footer';
 
@@ -76,6 +84,90 @@ export default function App() {
   const [selectedCatalogForOrder, setSelectedCatalogForOrder] = useState<CatalogItem | null>(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState<boolean>(false);
 
+  // Digital Themes state with local storage persistence
+  const [digitalThemes, setDigitalThemes] = useState<DigitalTheme[]>(() => {
+    const saved = localStorage.getItem('dheluwang_digital_themes');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return defaultDigitalThemes;
+      }
+    }
+    return defaultDigitalThemes;
+  });
+
+  // Owner Authentication State
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return sessionStorage.getItem('dheluwang_admin_auth') === 'true';
+  });
+  const [isAdminPasswordModalOpen, setIsAdminPasswordModalOpen] = useState<boolean>(false);
+  const [pendingActionAfterAuth, setPendingActionAfterAuth] = useState<(() => void) | null>(null);
+
+  // Secret keyboard shortcut listener for owner: Ctrl + Shift + A + S + P
+  useEffect(() => {
+    const pressedKeys = new Set<string>();
+    let sequenceHistory: string[] = [];
+    let sequenceTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      pressedKeys.add(key);
+
+      const hasCtrl = e.ctrlKey || e.metaKey || pressedKeys.has('control') || pressedKeys.has('meta');
+      const hasShift = e.shiftKey || pressedKeys.has('shift');
+
+      if (hasCtrl && hasShift) {
+        // Track key press history while Ctrl+Shift are held
+        if (['a', 's', 'p'].includes(key)) {
+          sequenceHistory.push(key);
+          if (sequenceTimer) clearTimeout(sequenceTimer);
+          sequenceTimer = setTimeout(() => {
+            sequenceHistory = [];
+          }, 2000);
+        }
+
+        // Check 1: All A, S, P held simultaneously while Ctrl+Shift are active
+        const hasA = pressedKeys.has('a');
+        const hasS = pressedKeys.has('s');
+        const hasP = pressedKeys.has('p');
+
+        // Check 2: Letters A, S, P pressed in chorded combination
+        const hasAllLettersInSequence = 
+          sequenceHistory.includes('a') && 
+          sequenceHistory.includes('s') && 
+          sequenceHistory.includes('p');
+
+        if ((hasA && hasS && hasP) || hasAllLettersInSequence) {
+          e.preventDefault();
+          pressedKeys.clear();
+          sequenceHistory = [];
+          handleOpenConfigWithAuth();
+        }
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      pressedKeys.delete(e.key.toLowerCase());
+    };
+
+    const handleBlur = () => {
+      pressedKeys.clear();
+      sequenceHistory = [];
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+      if (sequenceTimer) clearTimeout(sequenceTimer);
+    };
+  }, [isAdminAuthenticated]);
+
   // Test Firebase connection on boot
   useEffect(() => {
     testConnection();
@@ -85,6 +177,40 @@ export default function App() {
   const handleNavigate = (sectionId: string) => {
     setActiveSection(sectionId);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Protected open configuration handler
+  const handleOpenConfigWithAuth = () => {
+    if (isAdminAuthenticated) {
+      setIsConfigModalOpen(true);
+    } else {
+      setPendingActionAfterAuth(() => () => setIsConfigModalOpen(true));
+      setIsAdminPasswordModalOpen(true);
+    }
+  };
+
+  // Generic admin gate for actions (edit catalog, add photo, edit digital invitation)
+  const handleRequestAdminAuth = (action: () => void) => {
+    if (isAdminAuthenticated) {
+      action();
+    } else {
+      setPendingActionAfterAuth(() => action);
+      setIsAdminPasswordModalOpen(true);
+    }
+  };
+
+  const handleAdminAuthSuccess = () => {
+    setIsAdminAuthenticated(true);
+    setIsAdminPasswordModalOpen(false);
+    if (pendingActionAfterAuth) {
+      pendingActionAfterAuth();
+      setPendingActionAfterAuth(null);
+    }
+  };
+
+  const handleAdminLogout = () => {
+    setIsAdminAuthenticated(false);
+    sessionStorage.removeItem('dheluwang_admin_auth');
   };
 
   // Handler when user clicks "Pilih Desain Ini untuk Pemesanan" in Catalog
@@ -112,10 +238,8 @@ export default function App() {
       });
     } catch (error) {
       console.warn('Note: Storing to Firestore encountered:', error);
-      // Even if offline/permission, we gracefully handle or bubble through skill error format
     }
 
-    // Update local state & storage
     setCatalogs((prev) => {
       const existsIndex = prev.findIndex((c) => c.id === item.id);
       let updated: CatalogItem[];
@@ -150,6 +274,51 @@ export default function App() {
     setGalleryItems((prev) => {
       const updated = [fullItem, ...prev];
       localStorage.setItem('dheluwang_gallery', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  // Save new or edited digital theme (including custom previewUrl) to Firestore & local state
+  const handleSaveDigitalTheme = async (item: DigitalTheme) => {
+    try {
+      await setDoc(doc(db, 'digital_themes', item.id), {
+        name: item.name.slice(0, 150),
+        slug: (item.slug || '').slice(0, 100),
+        category: item.category.slice(0, 80),
+        styleCategory: (item.styleCategory || item.category).slice(0, 80),
+        previewThumbnail: item.previewThumbnail.slice(0, 1000),
+        additionalImages: (item.additionalImages || []).slice(0, 10),
+        previewUrl: item.previewUrl.slice(0, 1000),
+        price: item.price.slice(0, 50),
+        originalPrice: (item.originalPrice || '').slice(0, 50),
+        accentColor: (item.accentColor || '#996515').slice(0, 30),
+        badge: (item.badge || '').slice(0, 50),
+        description: (item.description || '').slice(0, 500),
+        features: (item.features || []).slice(0, 20),
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      console.warn('Note: Storing digital theme to Firestore encountered:', error);
+    }
+
+    setDigitalThemes((prev) => {
+      const existsIndex = prev.findIndex((t) => t.id === item.id);
+      let updated: DigitalTheme[];
+      if (existsIndex >= 0) {
+        updated = [...prev];
+        updated[existsIndex] = item;
+      } else {
+        updated = [item, ...prev];
+      }
+      localStorage.setItem('dheluwang_digital_themes', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleDeleteDigitalTheme = (themeId: string) => {
+    setDigitalThemes((prev) => {
+      const updated = prev.filter((t) => t.id !== themeId);
+      localStorage.setItem('dheluwang_digital_themes', JSON.stringify(updated));
       return updated;
     });
   };
@@ -209,12 +378,14 @@ export default function App() {
         config={siteConfig}
         activeSection={activeSection}
         onNavigate={handleNavigate}
-        onOpenConfig={() => setIsConfigModalOpen(true)}
+        onOpenConfig={handleOpenConfigWithAuth}
+        isAdminAuthenticated={isAdminAuthenticated}
+        onLogout={handleAdminLogout}
       />
 
       {/* Main Content Area Routed by activeSection */}
       <main className="flex-1">
-        {/* BERANDA (Home: Hero + About & Philosophy + Why Us + Workflow + Testimonials) */}
+        {/* BERANDA */}
         {activeSection === 'beranda' && (
           <div>
             <HeroSection config={siteConfig} onNavigate={handleNavigate} />
@@ -222,34 +393,51 @@ export default function App() {
           </div>
         )}
 
-        {/* GALERI (Gallery: Photo collection, Lightbox slide kiri-kanan, Auto slide, Download, Add photo) */}
+        {/* GALERI */}
         {activeSection === 'galeri' && (
           <GallerySection
             items={galleryItems}
             onAddGalleryItem={handleAddGalleryItem}
+            isAdminAuthenticated={isAdminAuthenticated}
+            onRequestAdminAuth={handleRequestAdminAuth}
           />
         )}
 
-        {/* KATALOG (Catalog: Design cards, Complete specs, Zoom modal, Edit/Add designs, Autofill to form) */}
+        {/* KATALOG */}
         {activeSection === 'katalog' && (
           <CatalogSection
             catalogs={catalogs}
             onSelectCatalogForOrder={handleSelectCatalogForOrder}
             onSaveCatalog={handleSaveCatalog}
+            isAdminAuthenticated={isAdminAuthenticated}
+            onRequestAdminAuth={handleRequestAdminAuth}
           />
         )}
 
-        {/* KONTAK (Contact: WhatsApp, Jam Buka, Notes penting, Form pesan cepat) */}
+        {/* UNDANGAN DIGITAL (Katalog Tema Lengkap dengan Kumpulan Gambar & Tombol Preview Link Diisi Sendiri) */}
+        {activeSection === 'undangan-digital' && (
+          <DigitalInvitationSection
+            themes={digitalThemes}
+            onSaveTheme={handleSaveDigitalTheme}
+            onDeleteTheme={handleDeleteDigitalTheme}
+            isAdminAuthenticated={isAdminAuthenticated}
+            onRequestAdminAuth={handleRequestAdminAuth}
+            config={siteConfig}
+            onSelectForOrder={() => handleNavigate('data-form')}
+          />
+        )}
+
+        {/* KONTAK */}
         {activeSection === 'kontak' && (
           <ContactSection config={siteConfig} />
         )}
 
-        {/* FAQ (FAQ: Kapan jadinya, Minimal order, Garansi cetak ulang, dll) */}
+        {/* FAQ */}
         {activeSection === 'faq' && (
           <FAQSection faqs={faqs} config={siteConfig} />
         )}
 
-        {/* DATA FORM (3-Bagian Formulir Pemesanan Undangan Fisik dengan rekomendasi Wajib & Opsional) */}
+        {/* DATA FORM */}
         {activeSection === 'data-form' && (
           <DataFormSection
             config={siteConfig}
@@ -263,18 +451,28 @@ export default function App() {
       <Footer
         config={siteConfig}
         onNavigate={handleNavigate}
-        onOpenConfig={() => setIsConfigModalOpen(true)}
       />
 
       {/* Interactive WhatsApp Floating Button at bottom right */}
       <InteractiveWhatsAppButton config={siteConfig} />
 
-      {/* Centralized Configuration & Owner Guide Modal */}
+      {/* Centralized Configuration & Owner Guide Modal (Protected) */}
       <ConfigGuideModal
         isOpen={isConfigModalOpen}
         onClose={() => setIsConfigModalOpen(false)}
         config={siteConfig}
         onSaveConfig={handleSaveConfig}
+        onLogout={handleAdminLogout}
+      />
+
+      {/* Owner Security Password / PIN Verification Modal */}
+      <AdminPasswordModal
+        isOpen={isAdminPasswordModalOpen}
+        onClose={() => {
+          setIsAdminPasswordModalOpen(false);
+          setPendingActionAfterAuth(null);
+        }}
+        onSuccess={handleAdminAuthSuccess}
       />
 
     </div>

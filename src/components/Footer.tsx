@@ -5,10 +5,9 @@ import { SiteConfig } from '../types';
 interface FooterProps {
   config: SiteConfig;
   onNavigate: (sectionId: string) => void;
-  onOpenConfig: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ config, onNavigate, onOpenConfig }) => {
+export const Footer: React.FC<FooterProps> = ({ config, onNavigate }) => {
   return (
     <footer className="bg-[#231F1C] text-[#E8DCC4] border-t border-[#3D352D] pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -75,6 +74,14 @@ export const Footer: React.FC<FooterProps> = ({ config, onNavigate, onOpenConfig
               </li>
               <li>
                 <button
+                  onClick={() => onNavigate('undangan-digital')}
+                  className="hover:text-[#D4AF37] transition cursor-pointer text-[#F3E5AB]"
+                >
+                  ✨ Koleksi Undangan Digital
+                </button>
+              </li>
+              <li>
+                <button
                   onClick={() => onNavigate('kontak')}
                   className="hover:text-[#D4AF37] transition cursor-pointer"
                 >
@@ -122,15 +129,6 @@ export const Footer: React.FC<FooterProps> = ({ config, onNavigate, onOpenConfig
               <p className="text-[11px] text-[#8C7C6D] pt-1">
                 {config.operatingHoursWeekday} • {config.operatingHoursWeekend}
               </p>
-            </div>
-
-            <div className="pt-2">
-              <button
-                onClick={onOpenConfig}
-                className="text-[11px] text-[#A69786] hover:text-white underline cursor-pointer"
-              >
-                Buka Konfigurasi & Panduan Pemilik Web
-              </button>
             </div>
           </div>
 
