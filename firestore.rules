@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidOrder(data) {
+      return data.customerName is string && data.customerName.size() <= 150
+        && data.customerPhone is string && data.customerPhone.size() <= 30
+        && data.shippingAddress is string && data.shippingAddress.size() <= 500
+        && data.shippingCourier is string && data.shippingCourier.size() <= 100
+        && data.designTheme is string && data.designTheme.size() <= 150
+        && data.quantity is string && data.quantity.size() <= 20
+        && data.paperType is string && data.paperType.size() <= 100
+        && data.groomName is string && data.groomName.size() <= 200
+        && data.groomParents is string && data.groomParents.size() <= 250
+        && data.brideName is string && data.brideName.size() <= 200
+        && data.brideParents is string && data.brideParents.size() <= 250
+        && data.akadDateTimeLocation is string && data.akadDateTimeLocation.size() <= 350
+        && data.resepsiDateTimeLocation is string && data.resepsiDateTimeLocation.size() <= 350;
+    }
+
+    function isValidCatalog(data) {
+      return data.title is string && data.title.size() <= 150
+        && data.theme is string && data.theme.size() <= 80
+        && data.paper is string && data.paper.size() <= 150
+        && data.priceRange is string && data.priceRange.size() <= 80
+        && data.imageUrl is string && data.imageUrl.size() <= 1000;
+    }
+
+    function isValidGallery(data) {
+      return data.title is string && data.title.size() <= 150
+        && data.category is string && data.category.size() <= 80
+        && data.imageUrl is string && data.imageUrl.size() <= 1000;
+    }
+
+    function isValidFAQ(data) {
+      return data.question is string && data.question.size() <= 250
+        && data.answer is string && data.answer.size() <= 1000
+        && data.category is string && data.category.size() <= 80;
+    }
+
+    // Orders Collection
+    match /orders/{orderId} {
+      allow create: if isValidId(orderId) && isValidOrder(request.resource.data);
+      allow get: if isValidId(orderId);
+      allow list: if false; // protect user PII from client query scraping
+      allow update, delete: if false; // orders are immutable once submitted via website
+    }
+
+    // Catalog Collection
+    match /catalogs/{catalogId} {
+      allow read: if isValidId(catalogId);
+      allow write: if isValidId(catalogId) && isValidCatalog(request.resource.data);
+    }
+
+    // Gallery Items Collection
+    match /gallery_items/{galleryItemId} {
+      allow read: if isValidId(galleryItemId);
+      allow write: if isValidId(galleryItemId) && isValidGallery(request.resource.data);
+    }
+
+    // FAQ Collection
+    match /faqs/{faqId} {
+      allow read: if isValidId(faqId);
+      allow write: if isValidId(faqId) && isValidFAQ(request.resource.data);
+    }
+
+    // Connection test doc
+    match /test/{docId} {
+      allow read: if true;
+    }
+  }
+}

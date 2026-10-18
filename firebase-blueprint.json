@@ -1,0 +1,287 @@
+{
+  "entities": {
+    "Order": {
+      "title": "Order",
+      "description": "Formulir pemesanan undangan pernikahan fisik lengkap dari calon pengantin",
+      "type": "object",
+      "properties": {
+        "customerName": {
+          "type": "string",
+          "description": "Nama lengkap pemesan/calon pengantin",
+          "maxLength": 150
+        },
+        "customerPhone": {
+          "type": "string",
+          "description": "Nomor WhatsApp aktif pemesan",
+          "maxLength": 30
+        },
+        "customerEmail": {
+          "type": "string",
+          "description": "Alamat email pemesan untuk pengiriman invoice dan draft",
+          "maxLength": 150
+        },
+        "shippingAddress": {
+          "type": "string",
+          "description": "Alamat lengkap pengiriman fisik undangan",
+          "maxLength": 500
+        },
+        "shippingCourier": {
+          "type": "string",
+          "description": "Pilihan jasa pengiriman yang dipilih",
+          "maxLength": 100
+        },
+        "estimatedWeightKg": {
+          "type": "string",
+          "description": "Estimasi berat paket dalam kg",
+          "maxLength": 30
+        },
+        "estimatedShippingCost": {
+          "type": "string",
+          "description": "Estimasi ongkos kirim dalam Rupiah",
+          "maxLength": 50
+        },
+        "designTheme": {
+          "type": "string",
+          "description": "Pilihan tema atau nama desain dari katalog",
+          "maxLength": 150
+        },
+        "quantity": {
+          "type": "string",
+          "description": "Jumlah cetak atau eksemplar undangan",
+          "maxLength": 20
+        },
+        "paperType": {
+          "type": "string",
+          "description": "Pilihan jenis kertas fisik undangan",
+          "maxLength": 100
+        },
+        "finishing": {
+          "type": "string",
+          "description": "Pilihan finishing tambahan seperti hotprint gold foil, emboss, wax seal",
+          "maxLength": 150
+        },
+        "lamination": {
+          "type": "string",
+          "description": "Pilihan laminasi doff, soft touch, atau glossy",
+          "maxLength": 80
+        },
+        "groomName": {
+          "type": "string",
+          "description": "Nama lengkap dan panggilan calon mempelai pria",
+          "maxLength": 200
+        },
+        "groomParents": {
+          "type": "string",
+          "description": "Nama kedua orang tua mempelai pria",
+          "maxLength": 250
+        },
+        "brideName": {
+          "type": "string",
+          "description": "Nama lengkap dan panggilan calon mempelai wanita",
+          "maxLength": 200
+        },
+        "brideParents": {
+          "type": "string",
+          "description": "Nama kedua orang tua mempelai wanita",
+          "maxLength": 250
+        },
+        "akadDateTimeLocation": {
+          "type": "string",
+          "description": "Tanggal, waktu, dan lokasi acara akad nikah / pemberkatan",
+          "maxLength": 350
+        },
+        "resepsiDateTimeLocation": {
+          "type": "string",
+          "description": "Tanggal, waktu, dan lokasi resepsi pernikahan",
+          "maxLength": 350
+        },
+        "turutMengundang": {
+          "type": "string",
+          "description": "Daftar keluarga atau pihak yang turut mengundang (opsional)",
+          "maxLength": 500
+        },
+        "mapsLink": {
+          "type": "string",
+          "description": "Tautan link Google Maps atau panduan QR lokasi (opsional)",
+          "maxLength": 300
+        },
+        "specialNotes": {
+          "type": "string",
+          "description": "Catatan khusus, request ornamen, atau ayat suci (opsional)",
+          "maxLength": 1000
+        },
+        "totalEstimatedPrice": {
+          "type": "string",
+          "description": "Total perkiraan biaya pesanan undangan",
+          "maxLength": 50
+        },
+        "status": {
+          "type": "string",
+          "description": "Status pengerjaan pesanan",
+          "maxLength": 50
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Waktu pembuatan pemesanan ISO 8601",
+          "maxLength": 50
+        }
+      },
+      "required": [
+        "customerName",
+        "customerPhone",
+        "shippingAddress",
+        "shippingCourier",
+        "designTheme",
+        "quantity",
+        "paperType",
+        "groomName",
+        "groomParents",
+        "brideName",
+        "brideParents",
+        "akadDateTimeLocation",
+        "resepsiDateTimeLocation"
+      ]
+    },
+    "CatalogItem": {
+      "title": "CatalogItem",
+      "description": "Item katalog desain undangan pernikahan fisik dengan spesifikasi cetak lengkap",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Nama judul seri desain undangan",
+          "maxLength": 150
+        },
+        "theme": {
+          "type": "string",
+          "description": "Kategori tema (Classic Royal, Modern Minimalist, Botanical Flora, Heritage Javanese, Velvet Hardcover)",
+          "maxLength": 80
+        },
+        "paper": {
+          "type": "string",
+          "description": "Spesifikasi bahan kertas",
+          "maxLength": 150
+        },
+        "lamination": {
+          "type": "string",
+          "description": "Spesifikasi laminasi",
+          "maxLength": 100
+        },
+        "hotprint": {
+          "type": "string",
+          "description": "Spesifikasi foil emas / hotprint",
+          "maxLength": 100
+        },
+        "emboss": {
+          "type": "string",
+          "description": "Spesifikasi emboss / deboss tekstur timbul",
+          "maxLength": 100
+        },
+        "priceRange": {
+          "type": "string",
+          "description": "Estimasi harga per pcs",
+          "maxLength": 80
+        },
+        "minOrder": {
+          "type": "string",
+          "description": "Ketentuan minimal pemesanan pcs",
+          "maxLength": 50
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL foto preview resolusi tinggi undangan fisik",
+          "maxLength": 1000
+        },
+        "description": {
+          "type": "string",
+          "description": "Deskripsi filosofi dan kesan mewah desain",
+          "maxLength": 500
+        }
+      },
+      "required": [
+        "title",
+        "theme",
+        "paper",
+        "priceRange",
+        "imageUrl"
+      ]
+    },
+    "GalleryItem": {
+      "title": "GalleryItem",
+      "description": "Item foto galeri dokumentasi undangan fisik",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Judul foto dokumentasi",
+          "maxLength": 150
+        },
+        "category": {
+          "type": "string",
+          "description": "Kategori foto",
+          "maxLength": 80
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL foto galeri",
+          "maxLength": 1000
+        },
+        "caption": {
+          "type": "string",
+          "description": "Keterangan detail teknik cetak atau nuansa",
+          "maxLength": 300
+        }
+      },
+      "required": [
+        "title",
+        "category",
+        "imageUrl"
+      ]
+    },
+    "FAQItem": {
+      "title": "FAQItem",
+      "description": "Pertanyaan yang sering ditanyakan seputar pembuatan undangan pernikahan",
+      "type": "object",
+      "properties": {
+        "question": {
+          "type": "string",
+          "description": "Pertanyaan",
+          "maxLength": 250
+        },
+        "answer": {
+          "type": "string",
+          "description": "Jawaban lengkap dan jelas",
+          "maxLength": 1000
+        },
+        "category": {
+          "type": "string",
+          "description": "Kategori pertanyaan (Waktu Pengerjaan, Bahan & Cetak, Pemesanan & Revisi, Pengiriman)",
+          "maxLength": 80
+        }
+      },
+      "required": [
+        "question",
+        "answer",
+        "category"
+      ]
+    }
+  },
+  "firestore": {
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Koleksi data pemesanan undangan fisik oleh calon pengantin"
+    },
+    "/catalogs/{catalogId}": {
+      "schema": "CatalogItem",
+      "description": "Koleksi katalog desain undangan fisik"
+    },
+    "/gallery_items/{galleryItemId}": {
+      "schema": "GalleryItem",
+      "description": "Koleksi foto galeri dokumentasi fisik undangan"
+    },
+    "/faqs/{faqId}": {
+      "schema": "FAQItem",
+      "description": "Koleksi FAQ seputar undangan pernikahan"
+    }
+  }
+}
