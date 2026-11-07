@@ -26,7 +26,7 @@ export const defaultCatalogs: CatalogItem[] = [
     emboss: 'Deboss 3D Frame Ornamen Monogram Tradisional Modern',
     priceRange: 'Rp 14.500 - Rp 18.500 / pcs',
     minOrder: '200 pcs',
-    imageUrl: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&w=1000&q=80',
+    imageUrl: 'src/images/2.jpg',
     description: 'Seri terfavorit para pengantin bangsawan modern. Menggabungkan ketebalan hardcover kokoh dengan sentuhan beludru velvet dan kilau foil emas sampanye yang sangat memikat di bawah cahaya.',
     badge: 'Best Seller'
   },
